@@ -34,7 +34,5 @@ It demonstrates understanding of:
 
 
 ## API Overview
-- POST /shorten
-- Creates a short URL.
-- GET /{shortCode}
-- Redirects to the original URL.
+- POST /shorten : Creates a short URL.
+- GET /{shortCode} : Redirects to the original URL.
