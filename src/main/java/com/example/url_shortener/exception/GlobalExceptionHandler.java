@@ -62,7 +62,6 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, "Invalid request format or data types");
     }
 
-    // Generic fallback for any other unexpected errors
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGlobalException(Exception ex) {
         LOG.warn("An exception occurred : {}", ex.getMessage());

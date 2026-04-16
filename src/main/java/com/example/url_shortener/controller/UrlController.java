@@ -23,10 +23,10 @@ public class UrlController {
     /**
      * Creation Endpoint
      * Returns 201 Created and the short code.
+     * Note: If the code enters this method, the RequestBody request is already valid.
      */
     @PostMapping("shorten")
     public ResponseEntity<ShortenUrlResponse> shortenUrl(@Valid @RequestBody ShortenUrlRequest request) {
-        // If the code enters this method, the URL is already valid.
         ShortenUrlResponse response = urlService.shortenUrl(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

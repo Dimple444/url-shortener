@@ -14,7 +14,7 @@ public record ShortenUrlRequest(
         Integer expiryDays
 ) {
 
-    // Compact Constructor - without () - Runs as soon as the JSON is mapped to the Record
+    // Compact Constructor - without parenthesis () - Runs as soon as the JSON is mapped to the Record
     public ShortenUrlRequest {
         if (longUrl != null && !longUrl.isEmpty()) {
             String lower = longUrl.toLowerCase().trim();

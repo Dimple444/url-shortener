@@ -20,11 +20,13 @@ public class UrlCleanupTask {
         this.urlRepository = urlRepository;
     }
 
-    // Deletes expired URLs from the database. Runs every day at midnight.
-    // Cron format: "sec min hour day month weekday"
+    /**
+     * Scheduled deletes expired URLs from the database. Runs every day at midnight.
+     * CacheEvict ensures that when a link is deleted or expires, it is also removed from Redis instantly.
+     * Cron format: "sec min hour day month weekday"
+     */
     @Scheduled(cron = "0 0 0 * * *")
-//    @Scheduled(fixedRate = 60000 )
-    // This ensures that when a link is deleted or expires, it is also removed from Redis instantly.
+    // @Scheduled(fixedRate = 60000 )
     @CacheEvict(value = "urls", allEntries = true)
     @Transactional
     public void purgeExpiredLinks() {
