@@ -40,7 +40,7 @@ Creates a short URL.
 
 Request:
 {
-  "longUrl": "https:example.com",
+  "longUrl": "https://example.com",
   "expiryDays": 7
 }
 
