@@ -34,5 +34,21 @@ It demonstrates understanding of:
 
 
 ## API Overview
-- POST /shorten : Creates a short URL.
-- GET /{shortCode} : Redirects to the original URL.
+
+### POST /shorten : 
+Creates a short URL.
+
+Request:
+{
+  "longUrl": "https:example.com",
+  "expiryDays": 7
+}
+
+Response:
+{
+  "shortUrl": "http://localhost:8080/aB12xZ",
+  "expiryDate": "2026-02-10T17:30:00"
+}
+
+### GET /{shortCode} : 
+Redirects to the original URL.

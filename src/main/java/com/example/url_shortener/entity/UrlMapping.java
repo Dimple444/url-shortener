@@ -5,13 +5,16 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/* * To Optimize lookups by shortCode.
- * idx_short_code: Named index for easier debugging/maintenance.
- * columnList: Tells DB to index 'shortCode' for O(1) or O(log n) lookup speed.
+/* * Table for storing URL mappings with optimized lookups
+ * * idx_short_code: Named index to ensure O(1) or O(log n) lookup time for redirection
+ * and prevent duplicate Base62 codes.
+ * * idx_expiry_date: Non-unique index to optimize the background cleanup task.
+ * Prevents full table scans when deleting expired links.
  */
 @Entity
 @Table(name = "url_mappings", indexes = {
-        @Index(name = "idx_short_code", columnList = "shortCode", unique = true)
+        @Index(name = "idx_short_code", columnList = "shortCode", unique = true),
+        @Index(name = "idx_expiry_date", columnList = "expiryDate")
 })
 public class UrlMapping {
 

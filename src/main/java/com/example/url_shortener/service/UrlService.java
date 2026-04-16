@@ -1,10 +1,15 @@
 package com.example.url_shortener.service;
 
+import com.example.url_shortener.config.AppConfig;
+import com.example.url_shortener.dto.ShortenUrlRequest;
+import com.example.url_shortener.dto.ShortenUrlResponse;
 import com.example.url_shortener.entity.UrlMapping;
 import com.example.url_shortener.exception.UrlExpiredException;
 import com.example.url_shortener.exception.UrlNotFoundException;
 import com.example.url_shortener.repository.UrlRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,11 +18,17 @@ import java.time.LocalDateTime;
 @Service
 public class UrlService {
 
-    @Autowired
-    private UrlRepository urlRepository;
+    private final AppConfig appConfig;
+    private final UrlRepository urlRepository;
+    private final ShortCodeGenerator shortCodeGenerator;
 
-    @Autowired
-    private ShortCodeGenerator shortCodeGenerator;
+    private static final Logger LOG = LoggerFactory.getLogger(UrlService.class);
+
+    public UrlService(AppConfig appConfig, UrlRepository urlRepository, ShortCodeGenerator shortCodeGenerator) {
+        this.appConfig = appConfig;
+        this.urlRepository = urlRepository;
+        this.shortCodeGenerator = shortCodeGenerator;
+    }
 
     /**
      * Generates a shortened URL using a "Pre-allocation" strategy.
@@ -34,22 +45,25 @@ public class UrlService {
      * constraint, ensuring the database never contains partial or invalid data.
      */
     @Transactional
-    public String shortenUrl(String longUrl) {
+    public ShortenUrlResponse shortenUrl(ShortenUrlRequest request) {
         Long nextId = urlRepository.getNextSequenceValue();
         String code = shortCodeGenerator.convertToBase62(nextId);
+        LocalDateTime expiryDate = request.expiryDays() == null ? LocalDateTime.now().plusMonths(appConfig.getDefaultExpiryMonths()) : LocalDateTime.now().plusDays(request.expiryDays());
 
         UrlMapping mapping = new UrlMapping();
         mapping.setId(nextId);
-        mapping.setLongUrl(longUrl);
+        mapping.setLongUrl(request.longUrl());
         mapping.setShortCode(code);
         mapping.setCreatedAt(LocalDateTime.now());
-        mapping.setExpiryDate(LocalDateTime.now().plusMonths(1));
+        mapping.setExpiryDate(expiryDate);
         urlRepository.save(mapping);
 
-        return code;
+        LOG.info("Short code {} generated", code);
+        return new ShortenUrlResponse(appConfig.getBaseUrl() + code, expiryDate);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "urls", key = "#shortCode")
     public String resolveUrl(String shortCode) {
         UrlMapping mapping = urlRepository.findByShortCode(shortCode)
                 .orElseThrow(() -> new UrlNotFoundException("Short URL not found : " + shortCode));

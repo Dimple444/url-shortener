@@ -1,9 +1,9 @@
 package com.example.url_shortener.controller;
 
-import com.example.url_shortener.exception.InvalidUrlException;
+import com.example.url_shortener.dto.ShortenUrlRequest;
+import com.example.url_shortener.dto.ShortenUrlResponse;
 import com.example.url_shortener.service.UrlService;
-import com.example.url_shortener.util.UrlValidator;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,26 +14,21 @@ import java.net.URI;
 @RequestMapping("/api/v1/urls")
 public class UrlController {
 
-    @Autowired
-    private UrlService urlService;
+    private final UrlService urlService;
+
+    public UrlController(UrlService urlService) {
+        this.urlService = urlService;
+    }
 
     /**
      * Creation Endpoint
      * Returns 201 Created and the short code.
      */
     @PostMapping("shorten")
-    public ResponseEntity<String> shortenUrl(@RequestBody String longUrl) {
-        String cleanedUrl = longUrl.trim();
-        if(!cleanedUrl.startsWith("http://") && !cleanedUrl.startsWith("https://")) {
-            cleanedUrl = "https://" + cleanedUrl;
-        }
-
-        if(!UrlValidator.isValid(cleanedUrl)) {
-            throw new InvalidUrlException("The provided URL is invalid" + cleanedUrl);
-        }
-
-        String shortCode = urlService.shortenUrl(cleanedUrl);
-        return new ResponseEntity<>(shortCode, HttpStatus.CREATED);
+    public ResponseEntity<ShortenUrlResponse> shortenUrl(@Valid @RequestBody ShortenUrlRequest request) {
+        // If the code enters this method, the URL is already valid.
+        ShortenUrlResponse response = urlService.shortenUrl(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     /**
@@ -49,6 +44,8 @@ public class UrlController {
         String longUrl = urlService.resolveUrl(shortCode);
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(longUrl))
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
                 .build();
 
     }
